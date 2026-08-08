@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <sys/epoll.h>
 #include <unistd.h>
+#include "response.h"
 #include "http.h"
 int main()
 {
@@ -182,18 +183,25 @@ int main()
 
                     if (bytes > 0)
                     {
-                        HttpRequest request = ParseRequest(buffer);
                         buffer[bytes] = '\0';
-                        
+                        HttpRequest request = ParseRequest(buffer);
+
                         std::cout
                             << "\n========== HTTP REQUEST ==========\n";
 
-                        std::cout << request.method<<request.path<<" "<<request.version << std::endl;
-                        for(const auto& header :request.headers){
-                            std::cout<<header.first<<" : "<<header.second<<std::endl;
-                        }
-                      
-                        std::cout<<request.body<<std::endl;
+                        std::cout << request.method
+                                  << " "
+                                  << request.path
+                                  << " "
+                                  << request.version
+                                  << std::endl;
+                            for(const auto& head : request.headers){
+                                std::cout<<head.first<<" : "<<head.second<<std::endl;
+                            }
+                        SendFileResponse(events[i].data.fd, request.path);
+                                         epoll_ctl(epoll_fd,EPOLL_CTL_DEL,events[i].data.fd,nullptr);
+                                         close(events[i].data.fd);
+                                         break;
                     }
                     else if (bytes == 0)
                     {
